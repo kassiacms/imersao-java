@@ -1,44 +1,42 @@
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.util.List;
 import java.util.Map;
 
 public class App {
+  
+    /**
+     * @param args
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception {
         System.out.println("Hello, World!");
 
         // fazer uma conexão HTTP e buscar os Top 250 Filmes
-        //String url = "https://imdb-api.com/en/API/Top250Movies/k_0ojt0yvm";
-        String url = "https://api.mocki.io/v2/549a5d8b";
-        URI endereco = URI.create(url);
-        var client = HttpClient.newHttpClient();
-        var request = HttpRequest.newBuilder(endereco).GET().build();
-        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-        String body = response.body();
+        // String url = "https://api.mocki.io/v2/549a5d8b";
+        // ExtratorDeConteudoDoIMDB extrator = new ExtratorDeConteudoDoIMDB();
         
+        String url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&start_date=2022-06-12&end_date=2022-06-14";
+        ExtratorDeConteudoDaNasa extrator = new ExtratorDeConteudoDaNasa();
 
-        // extrair só os dados que interessam (título, pôster, classificação)
-        JsonParser parser = new JsonParser();
-        List<Map<String, String>> listaDeFilmes = parser.parse(body);
-        
+        var http = new ClienteHttp();
+        String json = http.buscaDados(url);
+
         // exibir e manipular os dados
-        for (Map<String,String> filme : listaDeFilmes) {
+        List<Conteudo> conteudos = extrator.extraiConteudos(json);
+        
 
-            String urlImagem = filme.get("image");
-            String titulo = filme.get("title");
+        for(int i = 0; i<3; i++) {
 
-            InputStream inputStream = new URL(urlImagem).openStream();
-            String nomeArquivo = titulo + ".png";
+            Conteudo conteudo = conteudos.get(i);
+
+            InputStream inputStream = new URL(conteudo.getUrlImagem()).openStream();
+            String nomeArquivo = "saida/" + conteudo.getTitulo() + ".png";
 
             var geradora = new GeradorDeFigurinhas();
             geradora.cria(inputStream, nomeArquivo);
 
-            System.out.println(titulo);
+            System.out.println(conteudo.getTitulo());
             System.out.println();
         }
     }
